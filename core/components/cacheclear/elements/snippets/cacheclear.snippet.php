@@ -34,7 +34,13 @@
  * @package cacheclear
  **/
 
-/* addition by chris - allow authorised IPs only */
+/* addition by chris - allow managers and authorised IPs only */
+
+// check for manager session
+if (!$modx->user->hasSessionContext('mgr')) {
+    $modx->log(modX::LOG_LEVEL_ERROR, '[ClearCache] accessed by user without Manager Session' . "\n");
+    die();
+}
 
 // create array of authorised IPs
 $arrAuthorisedIPs = array();

@@ -2,7 +2,7 @@
 /**
  * CacheClear snippet for CacheClear extra
  *
- * Copyright 2012-2017 Bob Ray <https://bobsguides.com>
+ * Copyright 2012-2014 by Bob Ray <http://bobsguides.com>
  * Created on 12-14-2012
  *
  * CacheClear is free software; you can redistribute it and/or modify it under the
@@ -33,6 +33,22 @@
  *
  * @package cacheclear
  **/
+
+/* addition by chris - allow authorised IPs only */
+
+// create array of authorised IPs
+$arrAuthorisedIPs = array();
+$arrAuthorisedIPs[] = '217.155.46.234'; // cube office
+$arrAuthorisedIPs[] = '188.39.8.200';   // aqua office
+
+// die if current IP is not in $arrAuthorisedIPs
+if (in_array(fn_real_ip_address(), $arrAuthorisedIPs)) {
+    echo 'Authorised IP: ' . fn_real_ip_address() . "\n<br />";
+} else {
+    die();
+}
+
+
 
 if (!function_exists("rrmdir")) {
     function rrmdir($dir) {
@@ -66,7 +82,6 @@ $output .= '<br />';
 
 $files = scandir($cacheDir);
 
-
 $output .= "<ul>\n";
 foreach ($files as $file) {
     if ($file == '.' || $file == '..') {
@@ -86,7 +101,60 @@ foreach ($files as $file) {
     }
 }
 
+/* addition to clear statcache directory */
+$cacheDir = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'statcache';
+$files = scandir($cacheDir);
+
+$output .= "<li><strong>Statcache</strong></li>\n";
+
+$output .= "<ul>\n";
+foreach ($files as $file) {
+    if ($file == '.' || $file == '..') {
+        continue;
+    }
+    if (is_dir($cacheDir . '/' . $file)) {
+        if ($file == 'logs') {
+            continue;
+        }
+        $output .= "\n<li>" . $modx->lexicon('cc_removing') . ': ' . $file . '</li>';
+        rrmdir($cacheDir . '/' . $file);
+        if (is_dir($cacheDir . '/' . $file)) {
+            $output .= "\n<li>" . $modx->lexicon('cc_failed_to_remove') . ': ' . $file . '</li>';
+        }
+    } else {
+        unlink($cacheDir . '/' . $file);
+    }
+}
+/* clear statcache directory ends */
+
 $output .= "\n</p></ul><p>" . $modx->lexicon('cc_finished') . "</p>";
 
-
 return $output;
+
+/**
+ * Function to find real IP address
+ * http://www.cyberciti.biz/faq/php-howto-read-ip-address-of-remote-computerbrowser/
+ */
+
+function fn_real_ip_address() {
+	if (getenv('HTTP_CLIENT_IP')) {
+		$ip = getenv('HTTP_CLIENT_IP');
+	}
+	elseif (getenv('HTTP_X_FORWARDED_FOR')) {
+		$ip = getenv('HTTP_X_FORWARDED_FOR');
+	}
+	elseif (getenv('HTTP_X_FORWARDED')) {
+		$ip = getenv('HTTP_X_FORWARDED');
+	}
+	elseif (getenv('HTTP_FORWARDED_FOR')) {
+		$ip = getenv('HTTP_FORWARDED_FOR');
+	}
+	elseif (getenv('HTTP_FORWARDED')) {
+		$ip = getenv('HTTP_FORWARDED');
+	}
+	else {
+		$ip = $_SERVER['REMOTE_ADDR'];
+	}
+	return $ip;
+}
+

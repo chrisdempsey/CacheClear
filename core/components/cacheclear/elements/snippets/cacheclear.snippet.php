@@ -51,6 +51,7 @@ $arrAuthorisedIPs[] = '188.39.8.200';   // aqua office
 if (in_array(fn_real_ip_address(), $arrAuthorisedIPs)) {
     echo 'Authorised IP: ' . fn_real_ip_address() . "\n<br />";
 } else {
+    $modx->log(modX::LOG_LEVEL_ERROR, '[ClearCache] unauthorised access attempt from IP: ' . fn_real_ip_address() . "\n");
     die();
 }
 
